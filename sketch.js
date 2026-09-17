@@ -176,46 +176,46 @@ const WORDS = [
 
   {
     text: "FIND",
-    x: -55,
-    y: 260,
-    size: 310,
+    x: 42,
+    y: 145,
+    size: 225,
     align: "left",
     weight: 600,
-    rotation: 0,
-    spacing: -16
+    rotation: -0.018,
+    spacing: -11
   },
 
   {
     text: "YOUR",
-    x: 1000,
-    y: 535,
-    size: 125,
+    x: 1038,
+    y: 390,
+    size: 132,
     align: "right",
     weight: 300,
-    rotation: -0.025,
-    spacing: 7
+    rotation: 0.012,
+    spacing: -2
   },
 
   {
     text: "WAY",
-    x: 45,
-    y: 965,
-    size: 330,
+    x: 42,
+    y: 1395,
+    size: 255,
     align: "left",
     weight: 300,
-    rotation: -0.035,
-    spacing: -18
+    rotation: -0.018,
+    spacing: -13
   },
 
   {
     text: "BACK",
-    x: 1125,
-    y: 1665,
-    size: 325,
+    x: 1038,
+    y: 1680,
+    size: 245,
     align: "right",
     weight: 600,
-    rotation: 0.018,
-    spacing: -18
+    rotation: 0.012,
+    spacing: -14
   }
 
 ];
@@ -343,8 +343,8 @@ function criarHalftone() {
 
   const escala =
     min(
-      (width * 0.82) / img.width,
-      (height * 0.82) / img.height
+      (width * 0.94) / img.width,
+      (height * 0.94) / img.height
     );
 
   const offsetX =
