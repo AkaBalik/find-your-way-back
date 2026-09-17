@@ -4,6 +4,7 @@
 // Canvas 1080×1920 — Instagram Story 9:16
 // Fundo #01071E
 // Partículas #FF3333
+// Rasto #44FF60
 // Tipografia: Inter Tight
 //
 // FIND → YOUR → WAY → BACK
@@ -49,6 +50,8 @@ let inputAtivo = false;
 let inputTouch = false;
 
 let estavaNoRetrato = false;
+
+let canvasElemento;
 
 
 // =====================================================
@@ -145,7 +148,7 @@ const SLEEP_DIST = 0.4;
 
 
 // =====================================================
-// TOUCH — AJUSTES
+// TOUCH
 // =====================================================
 
 const TOUCH_RADIUS = 175;
@@ -169,12 +172,12 @@ const COR_RASTO = "#44FF60";
 // RASTO
 // =====================================================
 
-// Quanto tempo o verde demora a desaparecer.
-// Quanto mais perto de 1, mais longo é o rasto.
+// Persistência do rasto.
+// Mais perto de 1 = rasto mais longo.
 const TRAIL_FADE = 0.91;
 
-// Concentra o verde junto ao ponto onde o dedo passa.
-// Valores maiores = zona verde mais pequena.
+// Concentração do verde junto ao toque.
+// Quanto maior = zona verde mais concentrada.
 const TRAIL_POWER = 2.2;
 
 
@@ -187,45 +190,45 @@ const WORDS = [
   {
     text: "FIND",
     x: 35,
-    y: 435,
-    size: 285,
+    y: 430,
+    size: 270,
     align: "left",
     weight: 600,
     rotation: 0,
-    spacing: -18
+    spacing: -17
   },
 
   {
     text: "YOUR",
-    x: 1015,
-    y: 575,
-    size: 185,
+    x: 1035,
+    y: 690,
+    size: 150,
     align: "right",
-    weight: 300,
+    weight: 400,
     rotation: 0,
-    spacing: -7
+    spacing: -5
   },
 
   {
     text: "WAY",
     x: 35,
     y: 1210,
-    size: 350,
+    size: 340,
     align: "left",
     weight: 600,
     rotation: 0,
-    spacing: -24
+    spacing: -23
   },
 
   {
     text: "BACK",
     x: 1045,
     y: 1635,
-    size: 340,
+    size: 330,
     align: "right",
     weight: 600,
     rotation: 0,
-    spacing: -24
+    spacing: -23
   }
 
 ];
@@ -242,11 +245,13 @@ async function setup() {
     CANVAS_H * RENDER_SCALE
   );
 
+  canvasElemento = c.elt;
+
   pixelDensity(1);
 
   noStroke();
 
-  c.elt.style.touchAction = "none";
+  canvasElemento.style.touchAction = "none";
 
 
   // ---------------------------------------------------
@@ -289,6 +294,7 @@ async function setup() {
     fontStyle
   );
 
+
   await document.fonts.load(
     '300 200px "Inter Tight"'
   );
@@ -302,6 +308,35 @@ async function setup() {
   );
 
   fonteCarregada = true;
+
+
+  // ---------------------------------------------------
+  // POINTER EVENTS
+  // ---------------------------------------------------
+
+  canvasElemento.addEventListener(
+    "pointerdown",
+    pointerDown,
+    { passive: false }
+  );
+
+  canvasElemento.addEventListener(
+    "pointermove",
+    pointerMove,
+    { passive: false }
+  );
+
+  canvasElemento.addEventListener(
+    "pointerup",
+    pointerUp,
+    { passive: false }
+  );
+
+  canvasElemento.addEventListener(
+    "pointercancel",
+    pointerUp,
+    { passive: false }
+  );
 }
 
 
@@ -325,12 +360,14 @@ function brilhoEm(x, y) {
       img.height - 1
     );
 
+
   const i =
     4 *
     (
       yc * img.width +
       xc
     );
+
 
   return (
     img.pixels[i] * 0.299 +
@@ -352,11 +389,13 @@ function criarHalftone() {
       (height * 1.08) / img.height
     );
 
+
   const offsetX =
     (width - img.width * escala) / 2;
 
   const offsetY =
     (height - img.height * escala) / 2;
+
 
   hotX = offsetX;
   hotY = offsetY;
@@ -367,8 +406,10 @@ function criarHalftone() {
   hotH =
     img.height * escala;
 
+
   const espacoCanvas =
     SAMPLE_SPACING * escala;
+
 
   const MIN_DOT =
     espacoCanvas *
@@ -382,8 +423,13 @@ function criarHalftone() {
     espacoCanvas *
     EDGE_BOOST_FRACTION_CAP;
 
+
   const cand = [];
 
+
+  // ---------------------------------------------------
+  // RECOLHER CANDIDATOS
+  // ---------------------------------------------------
 
   for (
     let y = 0;
@@ -400,9 +446,11 @@ function criarHalftone() {
       const b =
         brilhoEm(x, y);
 
+
       if (b < 245) {
 
         let grad = 0;
+
 
         if (EDGE_BOOST) {
 
@@ -424,6 +472,7 @@ function criarHalftone() {
             );
         }
 
+
         cand.push(
           x,
           y,
@@ -435,13 +484,19 @@ function criarHalftone() {
   }
 
 
+  // ---------------------------------------------------
+  // DIMENSÃO DOS ARRAYS
+  // ---------------------------------------------------
+
   const nCand =
     cand.length / 4;
+
 
   const passo =
     nCand > MAX_PARTICLES
       ? nCand / MAX_PARTICLES
       : 1;
+
 
   total =
     Math.min(
@@ -449,10 +504,6 @@ function criarHalftone() {
       MAX_PARTICLES
     );
 
-
-  // ---------------------------------------------------
-  // ARRAYS
-  // ---------------------------------------------------
 
   px =
     new Float32Array(total);
@@ -478,13 +529,16 @@ function criarHalftone() {
   retorno =
     new Float32Array(total);
 
-  // NOVO — intensidade individual do rasto verde
   intensidadeRasto =
     new Float32Array(total);
 
   dormir =
     new Uint8Array(total);
 
+
+  // ---------------------------------------------------
+  // CRIAR PARTÍCULAS
+  // ---------------------------------------------------
 
   let n = 0;
 
@@ -497,6 +551,7 @@ function criarHalftone() {
 
     const k =
       Math.floor(i) * 4;
+
 
     const cx =
       cand[k];
@@ -579,18 +634,23 @@ function criarHalftone() {
       homeY[n] =
       Y;
 
+
     tam[n] =
       t;
+
 
     retorno[n] =
       RETURN_FORCE *
       fatorMassa;
 
+
     dormir[n] =
       1;
 
-    // Float32Array começa automaticamente em 0.
-    intensidadeRasto[n] = 0;
+
+    intensidadeRasto[n] =
+      0;
+
 
     n++;
   }
@@ -603,7 +663,10 @@ function criarHalftone() {
 
 function registarInput(x, y) {
 
-  // Guarda a velocidade do movimento do input.
+  // ---------------------------------------------------
+  // VELOCIDADE
+  // ---------------------------------------------------
+
   if (
     inputAnteriorX > -9000 &&
     inputAnteriorY > -9000
@@ -616,11 +679,14 @@ function registarInput(x, y) {
       y - inputAnteriorY;
   }
 
+
   inputAnteriorX = x;
   inputAnteriorY = y;
 
+
   inputX = x;
   inputY = y;
+
 
   inputAtivo = true;
 
@@ -644,6 +710,7 @@ function registarInput(x, y) {
     revelarProximaPalavra();
   }
 
+
   estavaNoRetrato =
     dentroDoRetrato;
 }
@@ -664,8 +731,6 @@ function revelarProximaPalavra() {
 
   } else {
 
-    // Depois de FIND YOUR WAY BACK,
-    // a próxima entrada reinicia.
     palavraAtual = 0;
   }
 }
@@ -690,91 +755,114 @@ function terminarInput() {
 
 
 // =====================================================
-// MOUSE
+// POINTER — MOUSE + TOUCH
 // =====================================================
 
-function mouseMoved() {
+function obterPosicaoPointer(event) {
 
-  if (!inputTouch) {
-
-    registarInput(
-      mouseX,
-      mouseY
-    );
-  }
-}
+  const rect =
+    canvasElemento.getBoundingClientRect();
 
 
-function mouseDragged() {
+  // O canvas interno é 1080 × 1920,
+  // mas no telemóvel é reduzido pelo CSS.
+  // Convertemos a posição física do dedo
+  // para as coordenadas internas do canvas.
 
-  if (!inputTouch) {
+  const escalaX =
+    width / rect.width;
 
-    registarInput(
-      mouseX,
-      mouseY
-    );
-  }
-}
+  const escalaY =
+    height / rect.height;
 
 
-function mouseReleased() {
+  return {
 
-  if (!inputTouch) {
+    x:
+      (event.clientX - rect.left) *
+      escalaX,
 
-    terminarInput();
-  }
+    y:
+      (event.clientY - rect.top) *
+      escalaY
+
+  };
 }
 
 
 // =====================================================
-// TOUCH
+// POINTER DOWN
 // =====================================================
 
-function touchStarted() {
+function pointerDown(event) {
 
-  inputTouch = true;
+  event.preventDefault();
 
-  if (
-    touches &&
-    touches.length > 0
-  ) {
 
-    registarInput(
-      touches[0].x,
-      touches[0].y
-    );
-  }
+  inputTouch =
+    event.pointerType === "touch";
 
-  return false;
+
+  const pos =
+    obterPosicaoPointer(event);
+
+
+  registarInput(
+    pos.x,
+    pos.y
+  );
+
+
+  canvasElemento.setPointerCapture(
+    event.pointerId
+  );
 }
 
 
-function touchMoved() {
+// =====================================================
+// POINTER MOVE
+// =====================================================
 
-  inputTouch = true;
+function pointerMove(event) {
 
-  if (
-    touches &&
-    touches.length > 0
-  ) {
+  event.preventDefault();
 
-    registarInput(
-      touches[0].x,
-      touches[0].y
-    );
-  }
 
-  return false;
+  const pos =
+    obterPosicaoPointer(event);
+
+
+  registarInput(
+    pos.x,
+    pos.y
+  );
 }
 
 
-function touchEnded() {
+// =====================================================
+// POINTER UP
+// =====================================================
+
+function pointerUp(event) {
+
+  event.preventDefault();
+
 
   terminarInput();
 
   inputTouch = false;
 
-  return false;
+
+  if (
+    canvasElemento.hasPointerCapture(
+      event.pointerId
+    )
+  ) {
+
+    canvasElemento.releasePointerCapture(
+      event.pointerId
+    );
+  }
 }
 
 
@@ -788,9 +876,11 @@ function draw() {
     COR_FUNDO
   );
 
+
   atualizarFisica();
 
   desenharParticulas();
+
 
   if (fonteCarregada) {
 
@@ -954,6 +1044,7 @@ function desenharTipografia() {
     drawingContext.letterSpacing =
       "0px";
 
+
     pop();
   }
 }
@@ -971,8 +1062,10 @@ function atualizarFisica() {
       ? TOUCH_RADIUS
       : MOUSE_RADIUS;
 
+
   const raioQ =
     raio * raio;
+
 
   const minX =
     inputX - raio;
@@ -991,13 +1084,14 @@ function atualizarFisica() {
     SLEEP_VEL *
     SLEEP_VEL;
 
+
   const sleepDistQ =
     SLEEP_DIST *
     SLEEP_DIST;
 
 
   // ---------------------------------------------------
-  // VELOCIDADE DO DEDO
+  // VELOCIDADE DO INPUT
   // ---------------------------------------------------
 
   const velocidadeInput =
@@ -1018,18 +1112,26 @@ function atualizarFisica() {
       : 0;
 
 
+  // ---------------------------------------------------
+  // PARTÍCULAS
+  // ---------------------------------------------------
+
   for (
     let i = 0;
     i < total;
     i++
   ) {
 
+
     // -------------------------------------------------
-    // RASTO VERDE
+    // RASTO
     // -------------------------------------------------
 
-    // O verde desaparece gradualmente,
-    // mesmo quando a partícula está adormecida.
+    // O rasto desaparece continuamente.
+    // Isto acontece antes do "continue",
+    // para que partículas adormecidas também
+    // consigam regressar ao coral.
+
     intensidadeRasto[i] *=
       TRAIL_FADE;
 
@@ -1049,8 +1151,10 @@ function atualizarFisica() {
       y < maxY;
 
 
-    // Se está parada e longe do input,
-    // não precisamos de calcular a física.
+    // -------------------------------------------------
+    // SLEEP
+    // -------------------------------------------------
+
     if (
       dormir[i] === 1 &&
       !perto
@@ -1068,7 +1172,7 @@ function atualizarFisica() {
 
 
     // -------------------------------------------------
-    // REGRESSO À POSIÇÃO ORIGINAL
+    // REGRESSO
     // -------------------------------------------------
 
     vX +=
@@ -1092,6 +1196,7 @@ function atualizarFisica() {
       const dy =
         y - inputY;
 
+
       const dQ =
         dx * dx +
         dy * dy;
@@ -1105,6 +1210,7 @@ function atualizarFisica() {
         const d =
           Math.sqrt(dQ);
 
+
         const inten =
           1 - d / raio;
 
@@ -1113,10 +1219,13 @@ function atualizarFisica() {
         // RASTO VERDE
         // -------------------------------------------------
 
-        // Concentra a cor verde no ponto de contacto.
         const toque =
           pow(
-            constrain(inten, 0, 1),
+            constrain(
+              inten,
+              0,
+              1
+            ),
             TRAIL_POWER
           );
 
@@ -1150,14 +1259,12 @@ function atualizarFisica() {
             1.8;
 
 
-          // O próprio movimento do dedo
-          // transmite energia às partículas.
-
           vX +=
             inputVX *
             intensidadeMovimento *
             TOUCH_MOVEMENT_FORCE *
             inten;
+
 
           vY +=
             inputVY *
@@ -1167,7 +1274,10 @@ function atualizarFisica() {
         }
 
 
-        // Evita divisão problemática.
+        // -------------------------------------------------
+        // DIRECÇÃO DA REPULSÃO
+        // -------------------------------------------------
+
         const direcaoX =
           dx / d;
 
@@ -1248,6 +1358,7 @@ function atualizarFisica() {
     py[i] =
       ny;
 
+
     vx[i] =
       vX;
 
@@ -1256,7 +1367,7 @@ function atualizarFisica() {
 
 
     // ---------------------------------------------------
-    // ADORMECER QUANDO REGRESSA
+    // ADORMECER
     // ---------------------------------------------------
 
     const dHx =
@@ -1279,11 +1390,13 @@ function atualizarFisica() {
       py[i] =
         homeY[i];
 
+
       vx[i] =
         0;
 
       vy[i] =
         0;
+
 
       dormir[i] =
         1;
@@ -1292,7 +1405,7 @@ function atualizarFisica() {
 
 
   // ---------------------------------------------------
-  // REDUZ GRADUALMENTE A VELOCIDADE DO INPUT
+  // DESACELERAR INPUT
   // ---------------------------------------------------
 
   inputVX *= 0.82;
@@ -1306,11 +1419,13 @@ function atualizarFisica() {
 
 function desenharParticulas() {
 
-  // Valores RGB das duas cores.
+  // Coral
   const coralR = 255;
   const coralG = 51;
   const coralB = 51;
 
+
+  // Verde
   const verdeR = 68;
   const verdeG = 255;
   const verdeB = 96;
@@ -1330,16 +1445,21 @@ function desenharParticulas() {
       );
 
 
-    // Interpolação entre coral e verde.
+    // -------------------------------------------------
+    // INTERPOLAÇÃO CORAL → VERDE
+    // -------------------------------------------------
+
     const r =
       coralR +
       (verdeR - coralR) *
       intensidade;
 
+
     const g =
       coralG +
       (verdeG - coralG) *
       intensidade;
+
 
     const b =
       coralB +
