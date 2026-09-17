@@ -177,7 +177,7 @@ const WORDS = [
   {
     text: "FIND",
     x: 35,
-    y: 383,
+    y: 435,
     size: 285,
     align: "left",
     weight: 600,
@@ -343,8 +343,8 @@ function criarHalftone() {
 
   const escala =
     min(
-      (width * 1.18) / img.width,
-      (height * 1.18) / img.height
+      (width * 1.08) / img.width,
+      (height * 1.08) / img.height
     );
 
   const offsetX =
