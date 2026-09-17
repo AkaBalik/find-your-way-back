@@ -176,46 +176,46 @@ const WORDS = [
 
   {
     text: "FIND",
-    x: 42,
-    y: 145,
-    size: 225,
+    x: 35,
+    y: 300,
+    size: 285,
     align: "left",
     weight: 600,
-    rotation: -0.018,
-    spacing: -11
+    rotation: 0,
+    spacing: -18
   },
 
   {
     text: "YOUR",
-    x: 1038,
-    y: 390,
-    size: 132,
+    x: 1015,
+    y: 575,
+    size: 185,
     align: "right",
     weight: 300,
-    rotation: 0.012,
-    spacing: -2
+    rotation: 0,
+    spacing: -7
   },
 
   {
     text: "WAY",
-    x: 42,
-    y: 1395,
-    size: 255,
+    x: 35,
+    y: 1210,
+    size: 350,
     align: "left",
-    weight: 300,
-    rotation: -0.018,
-    spacing: -13
+    weight: 600,
+    rotation: 0,
+    spacing: -24
   },
 
   {
     text: "BACK",
-    x: 1038,
-    y: 1680,
-    size: 245,
+    x: 1045,
+    y: 1635,
+    size: 340,
     align: "right",
     weight: 600,
-    rotation: 0.012,
-    spacing: -14
+    rotation: 0,
+    spacing: -24
   }
 
 ];
