@@ -17,6 +17,7 @@
 // Quando todas estão visíveis, nova entrada reinicia.
 // =====================================================
 
+
 let img;
 
 
@@ -25,6 +26,7 @@ let img;
 // =====================================================
 
 let px, py, homeX, homeY, vx, vy, tam, retorno;
+let intensidadeRasto;
 let dormir;
 
 let total = 0;
@@ -90,7 +92,6 @@ const RENDER_SCALE = 1.0;
 
 const IMAGE_NAME = "cabeca_ponto.png";
 
-// Mantido no valor que funciona correctamente.
 const IMAGE_WIDTH = 600;
 
 
@@ -147,15 +148,10 @@ const SLEEP_DIST = 0.4;
 // TOUCH — AJUSTES
 // =====================================================
 
-// Raio ligeiramente maior no telemóvel.
-// O dedo cobre uma área maior que um cursor.
 const TOUCH_RADIUS = 175;
 
-// Intensidade adicional provocada pelo movimento.
 const TOUCH_MOVEMENT_FORCE = 0.035;
 
-// Limite de velocidade do dedo usado para calcular
-// a intensidade da dispersão.
 const TOUCH_MAX_SPEED = 45;
 
 
@@ -166,6 +162,20 @@ const TOUCH_MAX_SPEED = 45;
 const COR_FUNDO = "#01071E";
 const COR_PARTICULAS = "#FF3333";
 const COR_TIPO = "#FF3333";
+const COR_RASTO = "#44FF60";
+
+
+// =====================================================
+// RASTO
+// =====================================================
+
+// Quanto tempo o verde demora a desaparecer.
+// Quanto mais perto de 1, mais longo é o rasto.
+const TRAIL_FADE = 0.91;
+
+// Concentra o verde junto ao ponto onde o dedo passa.
+// Valores maiores = zona verde mais pequena.
+const TRAIL_POWER = 2.2;
 
 
 // =====================================================
@@ -227,9 +237,6 @@ const WORDS = [
 
 async function setup() {
 
-  // Canvas interno continua exactamente 1080 × 1920.
-  // Não definimos width/height via c.style().
-  // O CSS passa agora a controlar o tamanho visual.
   const c = createCanvas(
     CANVAS_W * RENDER_SCALE,
     CANVAS_H * RENDER_SCALE
@@ -239,8 +246,6 @@ async function setup() {
 
   noStroke();
 
-  // Evita que o browser tente fazer scroll
-  // enquanto o utilizador interage com a peça.
   c.elt.style.touchAction = "none";
 
 
@@ -379,6 +384,7 @@ function criarHalftone() {
 
   const cand = [];
 
+
   for (
     let y = 0;
     y < img.height;
@@ -428,6 +434,7 @@ function criarHalftone() {
     }
   }
 
+
   const nCand =
     cand.length / 4;
 
@@ -441,6 +448,11 @@ function criarHalftone() {
       nCand,
       MAX_PARTICLES
     );
+
+
+  // ---------------------------------------------------
+  // ARRAYS
+  // ---------------------------------------------------
 
   px =
     new Float32Array(total);
@@ -466,10 +478,16 @@ function criarHalftone() {
   retorno =
     new Float32Array(total);
 
+  // NOVO — intensidade individual do rasto verde
+  intensidadeRasto =
+    new Float32Array(total);
+
   dormir =
     new Uint8Array(total);
 
+
   let n = 0;
+
 
   for (
     let i = 0;
@@ -492,6 +510,7 @@ function criarHalftone() {
     const gr =
       cand[k + 3];
 
+
     const X =
       offsetX +
       cx * escala;
@@ -500,11 +519,13 @@ function criarHalftone() {
       offsetY +
       cy * escala;
 
+
     const comGamma =
       pow(
         b / 255,
         GAMMA
       ) * 255;
+
 
     let t =
       map(
@@ -515,6 +536,7 @@ function criarHalftone() {
         MIN_DOT
       );
 
+
     if (
       EDGE_BOOST &&
       gr > EDGE_THRESHOLD
@@ -524,12 +546,14 @@ function criarHalftone() {
         EDGE_BOOST_AMOUNT;
     }
 
+
     t =
       constrain(
         t,
         MIN_DOT,
         LIMITE
       );
+
 
     const fatorMassa =
       1 -
@@ -545,6 +569,7 @@ function criarHalftone() {
         0,
         1
       );
+
 
     px[n] =
       homeX[n] =
@@ -563,6 +588,9 @@ function criarHalftone() {
 
     dormir[n] =
       1;
+
+    // Float32Array começa automaticamente em 0.
+    intensidadeRasto[n] = 0;
 
     n++;
   }
@@ -606,6 +634,7 @@ function registarInput(x, y) {
     x < hotX + hotW &&
     y > hotY &&
     y < hotY + hotH;
+
 
   if (
     dentroDoRetrato &&
@@ -656,11 +685,6 @@ function terminarInput() {
   inputAnteriorX = -9999;
   inputAnteriorY = -9999;
 
-  // Muito importante:
-  // levantar o dedo termina a entrada.
-  //
-  // O próximo toque, mesmo no mesmo sítio,
-  // será considerado uma NOVA entrada.
   estavaNoRetrato = false;
 }
 
@@ -671,8 +695,6 @@ function terminarInput() {
 
 function mouseMoved() {
 
-  // Só usamos o rato quando não estamos
-  // a utilizar touch.
   if (!inputTouch) {
 
     registarInput(
@@ -794,6 +816,7 @@ function atualizarAlphas() {
     const deveEstarVisivel =
       i < palavraAtual;
 
+
     if (deveEstarVisivel) {
 
       alphas[i] =
@@ -835,8 +858,10 @@ function desenharTipografia() {
       continue;
     }
 
+
     const w =
       WORDS[i];
+
 
     push();
 
@@ -925,6 +950,7 @@ function desenharTipografia() {
       0
     );
 
+
     drawingContext.letterSpacing =
       "0px";
 
@@ -960,6 +986,7 @@ function atualizarFisica() {
   const maxY =
     inputY + raio;
 
+
   const sleepVelQ =
     SLEEP_VEL *
     SLEEP_VEL;
@@ -979,6 +1006,7 @@ function atualizarFisica() {
       inputVY * inputVY
     );
 
+
   const intensidadeMovimento =
     inputTouch
       ? constrain(
@@ -996,11 +1024,22 @@ function atualizarFisica() {
     i++
   ) {
 
+    // -------------------------------------------------
+    // RASTO VERDE
+    // -------------------------------------------------
+
+    // O verde desaparece gradualmente,
+    // mesmo quando a partícula está adormecida.
+    intensidadeRasto[i] *=
+      TRAIL_FADE;
+
+
     const x =
       px[i];
 
     const y =
       py[i];
+
 
     const perto =
       inputAtivo &&
@@ -1009,6 +1048,9 @@ function atualizarFisica() {
       y > minY &&
       y < maxY;
 
+
+    // Se está parada e longe do input,
+    // não precisamos de calcular a física.
     if (
       dormir[i] === 1 &&
       !perto
@@ -1016,6 +1058,7 @@ function atualizarFisica() {
 
       continue;
     }
+
 
     let vX =
       vx[i];
@@ -1053,6 +1096,7 @@ function atualizarFisica() {
         dx * dx +
         dy * dy;
 
+
       if (
         dQ > 0 &&
         dQ < raioQ
@@ -1064,7 +1108,30 @@ function atualizarFisica() {
         const inten =
           1 - d / raio;
 
-        // Força base.
+
+        // -------------------------------------------------
+        // RASTO VERDE
+        // -------------------------------------------------
+
+        // Concentra a cor verde no ponto de contacto.
+        const toque =
+          pow(
+            constrain(inten, 0, 1),
+            TRAIL_POWER
+          );
+
+
+        intensidadeRasto[i] =
+          max(
+            intensidadeRasto[i],
+            toque
+          );
+
+
+        // -------------------------------------------------
+        // FORÇA BASE
+        // -------------------------------------------------
+
         let forca =
           inten *
           inten *
@@ -1075,15 +1142,13 @@ function atualizarFisica() {
         // TOUCH DINÂMICO
         // -------------------------------------------------
 
-        // Quanto mais rápido o dedo se move,
-        // mais violenta é a dispersão.
-
         if (inputTouch) {
 
           forca *=
             1 +
             intensidadeMovimento *
             1.8;
+
 
           // O próprio movimento do dedo
           // transmite energia às partículas.
@@ -1109,6 +1174,7 @@ function atualizarFisica() {
         const direcaoY =
           dy / d;
 
+
         vX +=
           direcaoX *
           forca;
@@ -1116,6 +1182,7 @@ function atualizarFisica() {
         vY +=
           direcaoY *
           forca;
+
 
         dormir[i] =
           0;
@@ -1142,6 +1209,7 @@ function atualizarFisica() {
       vX * vX +
       vY * vY;
 
+
     if (
       velQ >
       MAX_SPEED * MAX_SPEED
@@ -1151,6 +1219,7 @@ function atualizarFisica() {
         Math.sqrt(
           velQ
         );
+
 
       vX =
         (vX / v) *
@@ -1171,6 +1240,7 @@ function atualizarFisica() {
 
     const ny =
       y + vY;
+
 
     px[i] =
       nx;
@@ -1194,6 +1264,7 @@ function atualizarFisica() {
 
     const dHy =
       homeY[i] - ny;
+
 
     if (
       velQ < sleepVelQ &&
@@ -1224,8 +1295,6 @@ function atualizarFisica() {
   // REDUZ GRADUALMENTE A VELOCIDADE DO INPUT
   // ---------------------------------------------------
 
-  // Isto torna o movimento mais orgânico.
-
   inputVX *= 0.82;
   inputVY *= 0.82;
 }
@@ -1237,15 +1306,53 @@ function atualizarFisica() {
 
 function desenharParticulas() {
 
-  fill(
-    COR_PARTICULAS
-  );
+  // Valores RGB das duas cores.
+  const coralR = 255;
+  const coralG = 51;
+  const coralB = 51;
+
+  const verdeR = 68;
+  const verdeG = 255;
+  const verdeB = 96;
+
 
   for (
     let i = 0;
     i < total;
     i++
   ) {
+
+    const intensidade =
+      constrain(
+        intensidadeRasto[i],
+        0,
+        1
+      );
+
+
+    // Interpolação entre coral e verde.
+    const r =
+      coralR +
+      (verdeR - coralR) *
+      intensidade;
+
+    const g =
+      coralG +
+      (verdeG - coralG) *
+      intensidade;
+
+    const b =
+      coralB +
+      (verdeB - coralB) *
+      intensidade;
+
+
+    fill(
+      r,
+      g,
+      b
+    );
+
 
     circle(
       px[i],
