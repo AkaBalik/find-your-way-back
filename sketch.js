@@ -85,6 +85,7 @@ let fonteCarregada = false;
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
+const COMPOSICAO_Y = -190;
 
 const RENDER_SCALE = 1.0;
 
@@ -394,7 +395,8 @@ function criarHalftone() {
     (width - img.width * escala) / 2;
 
   const offsetY =
-    (height - img.height * escala) / 2;
+  (height - img.height * escala) / 2 +
+  COMPOSICAO_Y;
 
 
   hotX = offsetX;
@@ -961,9 +963,9 @@ function desenharTipografia() {
     // -------------------------------------------------
 
     translate(
-      w.x,
-      w.y
-    );
+  w.x,
+  w.y + COMPOSICAO_Y
+);
 
 
     // -------------------------------------------------
