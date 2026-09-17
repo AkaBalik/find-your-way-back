@@ -227,19 +227,12 @@ const WORDS = [
 
 async function setup() {
 
+  // Canvas interno continua exactamente 1080 × 1920.
+  // Não definimos width/height via c.style().
+  // O CSS passa agora a controlar o tamanho visual.
   const c = createCanvas(
     CANVAS_W * RENDER_SCALE,
     CANVAS_H * RENDER_SCALE
-  );
-
-  c.style(
-    "width",
-    CANVAS_W + "px"
-  );
-
-  c.style(
-    "height",
-    CANVAS_H + "px"
   );
 
   pixelDensity(1);
@@ -249,6 +242,7 @@ async function setup() {
   // Evita que o browser tente fazer scroll
   // enquanto o utilizador interage com a peça.
   c.elt.style.touchAction = "none";
+
 
   // ---------------------------------------------------
   // IMAGEM
@@ -271,6 +265,7 @@ async function setup() {
     "Partículas:",
     total
   );
+
 
   // ---------------------------------------------------
   // FONTE
@@ -601,6 +596,7 @@ function registarInput(x, y) {
 
   inputAtivo = true;
 
+
   // ---------------------------------------------------
   // ENTRADA NO RETRATO
   // ---------------------------------------------------
@@ -844,6 +840,7 @@ function desenharTipografia() {
 
     push();
 
+
     // -------------------------------------------------
     // POSIÇÃO
     // -------------------------------------------------
@@ -853,6 +850,7 @@ function desenharTipografia() {
       w.y
     );
 
+
     // -------------------------------------------------
     // ROTAÇÃO
     // -------------------------------------------------
@@ -860,6 +858,7 @@ function desenharTipografia() {
     rotate(
       w.rotation
     );
+
 
     // -------------------------------------------------
     // FONTE
@@ -873,12 +872,14 @@ function desenharTipografia() {
       w.size
     );
 
+
     // -------------------------------------------------
     // PESO
     // -------------------------------------------------
 
     drawingContext.font =
       `${w.weight} ${w.size}px "Inter Tight"`;
+
 
     // -------------------------------------------------
     // ALINHAMENTO
@@ -891,12 +892,14 @@ function desenharTipografia() {
       "top"
     );
 
+
     // -------------------------------------------------
     // TRACKING
     // -------------------------------------------------
 
     drawingContext.letterSpacing =
       w.spacing + "px";
+
 
     // -------------------------------------------------
     // COR
@@ -910,6 +913,7 @@ function desenharTipografia() {
     );
 
     noStroke();
+
 
     // -------------------------------------------------
     // TEXTO
@@ -964,6 +968,7 @@ function atualizarFisica() {
     SLEEP_DIST *
     SLEEP_DIST;
 
+
   // ---------------------------------------------------
   // VELOCIDADE DO DEDO
   // ---------------------------------------------------
@@ -983,6 +988,7 @@ function atualizarFisica() {
           1
         )
       : 0;
+
 
   for (
     let i = 0;
@@ -1017,6 +1023,7 @@ function atualizarFisica() {
     let vY =
       vy[i];
 
+
     // -------------------------------------------------
     // REGRESSO À POSIÇÃO ORIGINAL
     // -------------------------------------------------
@@ -1028,6 +1035,7 @@ function atualizarFisica() {
     vY +=
       (homeY[i] - y) *
       retorno[i];
+
 
     // -------------------------------------------------
     // FORÇA DO INPUT
@@ -1062,13 +1070,13 @@ function atualizarFisica() {
           inten *
           PUSH_FORCE;
 
+
         // -------------------------------------------------
         // TOUCH DINÂMICO
         // -------------------------------------------------
-        //
+
         // Quanto mais rápido o dedo se move,
         // mais violenta é a dispersão.
-        //
 
         if (inputTouch) {
 
@@ -1079,6 +1087,7 @@ function atualizarFisica() {
 
           // O próprio movimento do dedo
           // transmite energia às partículas.
+
           vX +=
             inputVX *
             intensidadeMovimento *
@@ -1091,6 +1100,7 @@ function atualizarFisica() {
             TOUCH_MOVEMENT_FORCE *
             inten;
         }
+
 
         // Evita divisão problemática.
         const direcaoX =
@@ -1112,6 +1122,7 @@ function atualizarFisica() {
       }
     }
 
+
     // ---------------------------------------------------
     // FRICÇÃO
     // ---------------------------------------------------
@@ -1121,6 +1132,7 @@ function atualizarFisica() {
 
     vY *=
       FRICTION;
+
 
     // ---------------------------------------------------
     // LIMITE DE VELOCIDADE
@@ -1149,6 +1161,7 @@ function atualizarFisica() {
         MAX_SPEED;
     }
 
+
     // ---------------------------------------------------
     // NOVA POSIÇÃO
     // ---------------------------------------------------
@@ -1170,6 +1183,7 @@ function atualizarFisica() {
 
     vy[i] =
       vY;
+
 
     // ---------------------------------------------------
     // ADORMECER QUANDO REGRESSA
@@ -1205,12 +1219,12 @@ function atualizarFisica() {
     }
   }
 
+
   // ---------------------------------------------------
   // REDUZ GRADUALMENTE A VELOCIDADE DO INPUT
   // ---------------------------------------------------
-  //
+
   // Isto torna o movimento mais orgânico.
-  //
 
   inputVX *= 0.82;
   inputVY *= 0.82;
