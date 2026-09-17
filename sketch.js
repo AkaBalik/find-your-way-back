@@ -343,8 +343,8 @@ function criarHalftone() {
 
   const escala =
     min(
-      (width * 1.08) / img.width,
-      (height * 1.08) / img.height
+      (width * 1.23) / img.width,
+      (height * 1.23) / img.height
     );
 
   const offsetX =
